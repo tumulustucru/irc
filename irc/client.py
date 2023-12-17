@@ -174,7 +174,8 @@ class ServerConnection(Connection):
 
         if self.connected:
             self.disconnect("Changing servers")
-
+        if self.password:
+            self.pass_(self.password)
         self.buffer = self.buffer_class()
         self.handlers = {}
         self.real_server_name = ""
@@ -205,8 +206,7 @@ class ServerConnection(Connection):
             self.user(self.username, self.ircname)
             self._sasl_step = self._sasl_cap_ls
             return self
-        if self.password:
-            self.pass_(self.password)
+
         self.nick(self.nickname)
         self.user(self.username, self.ircname)
         return self
