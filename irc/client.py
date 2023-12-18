@@ -141,7 +141,7 @@ class ServerConnection(Connection):
         server,
         port,
         nickname,
-        password=None,
+        password=None,  # Add IRC password parameter
         username=None,
         ircname=None,
         connect_factory=connection.Factory(),
@@ -174,8 +174,7 @@ class ServerConnection(Connection):
 
         if self.connected:
             self.disconnect("Changing servers")
-        if self.password:
-            self.pass_(self.password)
+
         self.buffer = self.buffer_class()
         self.handlers = {}
         self.real_server_name = ""
@@ -183,10 +182,11 @@ class ServerConnection(Connection):
         self.server = server
         self.port = port
         self.server_address = (server, port)
+        self.password = password
         self.nickname = nickname
         self.username = username or nickname
         self.ircname = ircname or nickname
-        self.password = password
+
         self.connect_factory = connect_factory
         self.sasl_login = sasl_login
         try:
@@ -196,20 +196,11 @@ class ServerConnection(Connection):
         self.connected = True
         self.reactor._on_connect(self.socket)
 
-        # Log on...
-        if self.sasl_login and self.password:
-            self._sasl_step = None
-            for i in ["cap", "authenticate", "saslsuccess", "saslfail"]:
-                self.add_global_handler(i, self._sasl_state_machine, -42)
-            self.cap("LS")
-            self.nick(self.nickname)
-            self.user(self.username, self.ircname)
-            self._sasl_step = self._sasl_cap_ls
-            return self
-
+        self.send_raw("CAP REQ :twitch.tv/commands twitch.tv/tags twitch.tv/membership")
+        self.pass_(self.password)  # This line sends the PASS command
         self.nick(self.nickname)
         self.user(self.username, self.ircname)
-        return self
+
 
     def _sasl_state_machine(self, connection, event):
         if self._sasl_step:
