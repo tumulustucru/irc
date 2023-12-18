@@ -137,7 +137,7 @@ class SingleServerIRCBot(irc.client.SimpleIRCClient):
         nickname -- The bot's nickname.
 
         realname -- The bot's realname.
-
+        edit : + password
         recon -- A ReconnectStrategy for reconnecting on
             disconnect or failed connection.
 
@@ -148,12 +148,13 @@ class SingleServerIRCBot(irc.client.SimpleIRCClient):
             method.
     """
 
+
     def __init__(
         self,
         server_list,
         nickname,
         realname,
-        _=None,
+        password,  # Add a password parameter
         recon=ExponentialBackoff(),
         **connect_params,
     ):
@@ -164,8 +165,10 @@ class SingleServerIRCBot(irc.client.SimpleIRCClient):
         self.servers = more_itertools.peekable(itertools.cycle(specs))
         self.recon = recon
 
-        self._nickname = nickname
+        self._nickname = nickname      
         self._realname = realname
+        self._password = password  # Store the password
+        
         for i in [
             "disconnect",
             "join",
@@ -188,7 +191,7 @@ class SingleServerIRCBot(irc.client.SimpleIRCClient):
                 server.host,
                 server.port,
                 self._nickname,
-                server.password,
+                self._password,  # Pass the password to the connect method
                 ircname=self._realname,
                 **self.__connect_params,
             )
